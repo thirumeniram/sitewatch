@@ -1,0 +1,8 @@
+node_modules
+dist
+src/generated
+logs
+*.log
+.env
+src/pre-start/env/*.env
+!src/pre-start/env/example.env
