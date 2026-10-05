@@ -1,0 +1,100 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+  previewFeatures     = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WebsiteStatus {
+  UP
+  DOWN
+  UNKNOWN
+}
+
+enum CheckStatus {
+  UP
+  DOWN
+}
+
+enum IncidentStatus {
+  OPEN
+  CLOSED
+}
+
+model User {
+  id               String    @id @db.Uuid
+  email            String    @unique
+  status_page_slug String    @unique
+  created_at       DateTime  @default(now()) @db.Timestamptz(3)
+  websites         Website[]
+}
+
+model Website {
+  id                     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String        @db.Uuid
+  name                   String
+  url                    String
+  check_interval_minutes Int
+  current_status         WebsiteStatus @default(UNKNOWN)
+  is_public              Boolean       @default(false)
+  is_archived            Boolean       @default(false)
+  last_checked_at        DateTime?     @db.Timestamptz(3)
+  consecutive_failures   Int           @default(0)
+  created_at             DateTime      @default(now()) @db.Timestamptz(3)
+  modified_at            DateTime      @default(now()) @updatedAt @db.Timestamptz(3)
+  user                   User          @relation(fields: [user_id], references: [id])
+  checks                 Check[]
+  check_hourly           CheckHourly[]
+  incidents              Incident[]
+
+  @@index([user_id])
+}
+
+model Check {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  website_id       String      @db.Uuid
+  status           CheckStatus
+  status_code      Int?
+  response_time_ms Int?
+  error_message    String?
+  checked_at       DateTime    @default(now()) @db.Timestamptz(3)
+  website          Website     @relation(fields: [website_id], references: [id])
+
+  @@index([website_id, checked_at])
+  @@index([checked_at])
+}
+
+model CheckHourly {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  website_id               String   @db.Uuid
+  hour_start               DateTime @db.Timestamptz(3)
+  total_checks             Int
+  failed_checks            Int
+  average_response_time_ms Int?
+  website                  Website  @relation(fields: [website_id], references: [id])
+
+  @@unique([website_id, hour_start])
+  @@index([hour_start])
+}
+
+model Incident {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  website_id           String         @db.Uuid
+  status               IncidentStatus @default(OPEN)
+  started_at           DateTime       @default(now()) @db.Timestamptz(3)
+  ended_at             DateTime?      @db.Timestamptz(3)
+  failure_reason       String?
+  summary              String?
+  opened_email_sent_at DateTime?      @db.Timestamptz(3)
+  closed_email_sent_at DateTime?      @db.Timestamptz(3)
+  summary_requested_at DateTime?      @db.Timestamptz(3)
+  website              Website        @relation(fields: [website_id], references: [id])
+
+  @@index([website_id, started_at])
+  @@unique([website_id], map: "Incident_one_open_per_website", where: raw("status = 'OPEN'"))
+}
