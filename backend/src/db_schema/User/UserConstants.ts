@@ -1,0 +1,10 @@
+export const MAX_USERS = 50;
+export const EMAIL_MAX_LENGTH = 254;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 72;
+export const SLUG_NAME_PART_MAX_LENGTH = 20;
+export const SLUG_RANDOM_PART_BYTES = 3;
+export const SLUG_FALLBACK_NAME = "user";
+export const SLUG_INVALID_CHARACTERS = /[^a-z0-9]+/g;
+export const STATUS_PAGE_SLUG_PATTERN = /^[a-z0-9-]{3,40}$/;
+export const SLUG_EDGE_DASHES = /^-+|-+$/g;
