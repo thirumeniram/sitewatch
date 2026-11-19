@@ -1,0 +1,9 @@
+.sw-details-chart {
+  position: relative;
+  height: 280px;
+}
+
+.sw-details-stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
